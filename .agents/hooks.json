@@ -1,0 +1,11 @@
+{
+  "token-optimizer-guard": {
+    "enabled": true,
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "python -c \"import json; print(json.dumps({'injectSteps': [{'ephemeralMessage': '⚡ Token Optimizer Aktif (BALANCED): Cerrahi düzenleme yapın ve yanıtları yalın tutun.'}]}))\""
+      }
+    ]
+  }
+}

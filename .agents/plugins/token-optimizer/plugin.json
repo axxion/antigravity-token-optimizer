@@ -1,0 +1,6 @@
+{
+  "name": "token-optimizer",
+  "version": "1.0.0",
+  "description": "Token & Context Optimization Plugin for Google Antigravity",
+  "profile": "balanced"
+}
