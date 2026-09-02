@@ -127,6 +127,13 @@ When installed in a project, the optimizer generates native Antigravity workspac
 *   **`.agents/hooks.json`** -- Lifecycle hooks injecting lightweight optimization directives.
 *   **`.agents/plugins/token-optimizer/`** -- Distributable Antigravity plugin bundle.
 
+> **Note on hooks.** The generated `PreInvocation` hook injects a per-turn reminder and is
+> confirmed working in the Antigravity **CLI** (`agy`). At the time of writing, community reports
+> indicate hooks are not dispatched by the Antigravity **IDE / desktop** app (2.x) — they fail
+> silently rather than erroring. This does not affect core optimization: the behavioral policies
+> live in `.agents/rules/token_optimization.md`, which the IDE loads through its own workspace-rule
+> mechanism. Only the repeated on-screen reminder is lost.
+
 ---
 
 ## Test Verification

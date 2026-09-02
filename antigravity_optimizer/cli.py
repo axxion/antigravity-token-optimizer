@@ -242,7 +242,7 @@ def main() -> int:
     p_comp.add_argument("--input", default="", help="Sıkıştırılacak metin")
 
     # expand
-    p_exp = subparsers.add_parser("expand", help="CCR ile sıkıştırılmış orijinal çıktıyı geri getirir")
+    p_exp = subparsers.add_parser("expand", help="Sıkıştırılmış orijinal çıktıyı kayıpsız geri getirir")
     p_exp.add_argument("ref_id", help="Saklanan referans kimliği (örn: ref_a1b2c3d4)")
 
     # status

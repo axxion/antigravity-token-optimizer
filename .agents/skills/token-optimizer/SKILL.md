@@ -35,3 +35,12 @@ antigravity-optimizer install --profile aggressive   # Maksimum tasarruf
 antigravity-optimizer install --profile balanced     # Önerilen dengeli profil
 antigravity-optimizer install --profile developer    # Detaylı loglama
 ```
+
+## ⚠️ Bilinen Sınırlama: `.agents/hooks.json`
+
+`install` komutu ayrıca her model çağrısından önce kısa bir hatırlatma enjekte eden bir `.agents/hooks.json`
+(`PreInvocation` hook'u) kurar. Bu hook, Antigravity **CLI**'da (`agy`) çalışır; topluluk raporlarına göre
+Antigravity **IDE/masaüstü uygulaması**nda (2.x) şu an sessizce tetiklenmiyor — hata vermiyor, sadece
+çalışmıyor. Bu, temel işlevi **bozmaz**: yukarıdaki davranış kuralları zaten `.agents/rules/token_optimization.md`
+içinde durağan bir kural olarak yer alıyor ve Antigravity IDE bu dosyayı ayrı bir mekanizmayla otomatik
+okuyor. Kaybedilen şey yalnızca her tur tekrarlanan "⚡ Token Optimizer Aktif" hatırlatma mesajıdır.

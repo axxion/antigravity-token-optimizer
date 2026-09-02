@@ -83,3 +83,14 @@ def test_context_buffer_store():
         # Retrieve back
         recovered = compressor.store.retrieve(res.ref_id)
         assert recovered == huge_log
+
+
+def test_compressor_massive_outputs():
+    compressor = ContextCompressor(OptimizerConfig(profile=ProfileType.AGGRESSIVE))
+
+    # 50,000 character output
+    huge_output = "TEST LINE " + ("0123456789\n" * 4000)
+    res = compressor.compress_command_output("npm test", huge_output)
+    assert len(res.content) <= 3000
+    assert res.ratio_pct > 80
+    assert "sıkıştırıldı" in res.content

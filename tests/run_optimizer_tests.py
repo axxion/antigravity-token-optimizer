@@ -4,23 +4,26 @@ Dedicated Test Runner for Antigravity Token Optimizer Suite.
 
 import sys
 
-from tests.test_ast_skeleton import test_python_ast_skeleton, test_typescript_skeleton
+from tests.test_ast_skeleton import (
+    test_python_ast_skeleton,
+    test_typescript_skeleton,
+    test_typescript_multiline_imports_are_not_truncated,
+    test_ast_skeleton_syntax_errors_and_edge_cases,
+)
 from tests.test_compressor import (
     test_command_compression,
     test_search_compression,
     test_data_compactor,
     test_context_buffer_store,
+    test_compressor_massive_outputs,
 )
 from tests.test_auditor import test_project_auditor
 from tests.test_generators import test_generators_installation
-from tests.test_edge_cases import (
-    test_ast_skeleton_syntax_errors_and_edge_cases,
-    test_compressor_massive_outputs,
-)
 
 OPTIMIZER_TESTS = [
     ("test_python_ast_skeleton", test_python_ast_skeleton),
     ("test_typescript_skeleton", test_typescript_skeleton),
+    ("test_typescript_multiline_imports_are_not_truncated", test_typescript_multiline_imports_are_not_truncated),
     ("test_command_compression", test_command_compression),
     ("test_search_compression", test_search_compression),
     ("test_data_compactor", test_data_compactor),
@@ -53,9 +56,8 @@ def run_all():
     print("=" * 65)
     print(f"  OPTIMIZER RESULTS: {passed} passed, {failed} failed.")
     print("=" * 65)
-    if failed > 0:
-        sys.exit(1)
+    return failed
 
 
 if __name__ == "__main__":
-    run_all()
+    sys.exit(1 if run_all() > 0 else 0)

@@ -8,7 +8,7 @@ from __future__ import annotations
 import ast
 import re
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 
 @dataclass
@@ -104,9 +104,44 @@ class ASTSkeletonExtractor:
         return result or code[:1000]
 
     @staticmethod
-    def extract_generic_skeleton(code: str, lang: str = "generic") -> str:
+    def _join_multiline_imports(lines: List[str]) -> List[str]:
+        """Collapses a multi-line `import {\\n  a,\\n  b\\n} from 'x';` block into one
+        logical line. Without this, signature matching keeps only the opening line and
+        strips its trailing `{`, leaving a bare `import` that says nothing."""
+        merged: List[str] = []
+        buffer: Optional[str] = None
+        buffered_count = 0
+
+        for line in lines:
+            stripped = line.strip()
+
+            if buffer is not None:
+                buffer += " " + stripped
+                buffered_count += 1
+                closed = "}" in buffer and ("from" in buffer or buffer.rstrip().endswith(";"))
+                # Bail out on an unterminated block so a malformed file cannot swallow the rest.
+                if closed or buffered_count > 40:
+                    merged.append(re.sub(r"\s+", " ", buffer).strip())
+                    buffer = None
+                    buffered_count = 0
+                continue
+
+            if re.match(r"^\s*(export\s+)?import\b", line) and "{" in line and "}" not in line:
+                buffer = line.strip()
+                buffered_count = 0
+                continue
+
+            merged.append(line)
+
+        if buffer is not None:
+            merged.append(re.sub(r"\s+", " ", buffer).strip())
+
+        return merged
+
+    @classmethod
+    def extract_generic_skeleton(cls, code: str, lang: str = "generic") -> str:
         """Extracts function/class signatures using pattern matching."""
-        lines = code.splitlines()
+        lines = cls._join_multiline_imports(code.splitlines())
         skeleton_lines = []
 
         signature_patterns = [
