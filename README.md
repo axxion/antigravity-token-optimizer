@@ -14,7 +14,7 @@
 
 **Antigravity Token Optimizer** is a lightweight, zero-dependency context optimization suite engineered specifically for **Google Antigravity (IDE, CLI, and Antigravity 2.0)** and LLM-driven development environments.
 
-It identifies and eliminates conversational fluff, compresses verbose test and compiler streams, extracts AST-based code skeletons, compacts structured data payloads, and externalizes session memory into deterministic artifacts.
+It identifies and eliminates conversational fluff, compresses verbose test and compiler streams, extracts code skeletons (AST-based for Python, pattern-based for other languages), compacts structured data payloads, and externalizes session memory into deterministic artifacts.
 
 ```
 +------------------------------------------------------------------------+
@@ -39,12 +39,22 @@ It identifies and eliminates conversational fluff, compresses verbose test and c
 |---|---|---|---|
 | **1. `lean_prompt`** | Strips polite filler, restated user instructions, and lengthy preambles. | Eliminates 100-300 completion tokens per turn. | **15% - 30%** |
 | **2. `surgical_edits`** | Enforces targeted block modifications (`replace_file_content`) and sliced views (`view_file`). | Prevents rewriting hundreds of lines for minor changes. | **40% - 70%** |
-| **3. `code_skeleton`** | Extracts AST signatures (Python, TS, JS, Go, Rust, Java, C++) preserving types and docstrings. | Explores architecture without loading implementation bodies. | **60% - 85%** |
+| **3. `code_skeleton`** | Extracts signatures preserving types and docstrings. Python uses a real AST walk; TS, JS, Go, Rust, Java and C++ use pattern matching over source lines. | Explores architecture without loading implementation bodies. | **60% - 85%** |
 | **4. `command_compression`** | Applies output filters to `pytest`, `npm test`, `cargo test`, `go test`, and `git log`. | Discards passing test noise while retaining failure traces. | **50% - 80%** |
-| **5. `data_compactor`** | Transforms object collections into column-oriented tables and strips null/empty keys. | Massive token reduction on JSON tool outputs and API responses. | **50% - 70%** |
-| **6. `context_buffer`** | Lossless local caching storing raw uncompressed outputs indexed by unique reference tokens (`ref_...`). | Fully reversible; restore original output on demand via CLI or tools. | **Lossless** |
-| **7. `search_dedup`** | Enforces match limits, truncates long lines (120 chars), and deduplicates search results. | Prevents regex searches from overwhelming the context window. | **30% - 60%** |
-| **8. `context_memory`** | Checkpoints state, active tasks, and architecture decisions directly to disk (`BOARD.md`, `LEDGER.md`). | Survives context compaction without degrading model memory. | **50% - 90%** |
+| **5. `search_dedup`** | Enforces match limits, truncates long lines (120 chars), and deduplicates search results. | Prevents regex searches from overwhelming the context window. | **30% - 60%** |
+| **6. `context_memory`** | Checkpoints state, active tasks, and architecture decisions directly to disk (`BOARD.md`, `LEDGER.md`). | Survives context compaction without degrading model memory. | **50% - 90%** |
+
+Two further capabilities are always available and are not profile-toggleable, so they
+are not counted among the six engines above:
+
+| Capability | Functional Description | Where it applies |
+|---|---|---|
+| `data_compactor` | Transforms object collections into column-oriented tables and strips null/empty keys. | `compress` on structured data |
+| `context_buffer` | Lossless local cache holding raw uncompressed output behind a reference token (`ref_...`). | `compress` / `expand`, fully reversible |
+
+> **Savings percentages are design targets, not measurements.** They come from fixed
+> per-engine coefficients, not from profiling your repository. `antigravity-optimizer audit`
+> reports the same kind of estimate. Treat them as relative guidance between engines.
 
 ---
 
@@ -52,10 +62,13 @@ It identifies and eliminates conversational fluff, compresses verbose test and c
 
 Antigravity Token Optimizer provides four pre-configured operating modes:
 
-*   **`aggressive` (Maximum Savings ~60-75%):** All 8 engines active. Strict command output trimming, AST skeletons for all files above 80 lines, and tight search boundaries.
-*   **`balanced` (Recommended ~45-60%):** Balanced developer profile. Lean prompts, surgical edits, code skeletons, data compaction, search deduplication, and test filtering.
-*   **`developer` (Detailed Debugging ~30-45%):** Preserves full stack traces and verbose diffs while removing conversational filler and full-file rewrites.
-*   **`custom`:** Interactively toggle individual engines and specify custom thresholds.
+All profiles use a code-skeleton threshold of **120 lines**; they differ in how much
+command output and how many file lines they allow through.
+
+*   **`aggressive`:** All 6 engines active. Tightest limits — 2,500 chars of command output, 100 lines per file view.
+*   **`balanced` (recommended):** All 6 engines active. 4,000 chars of command output, 150 lines per file view.
+*   **`developer`:** 4 of 6 engines active — `command_compression` and `search_dedup` are off, so full stack traces and complete search results survive. 8,000 chars of command output, 250 lines per file view.
+*   **`custom`:** Currently a non-interactive alias that installs all 6 engines with `balanced` thresholds. Edit the generated `.agents/rules/token_optimization.md` to tune it by hand. (The `setup` wizard offers the three profiles above, not per-engine toggles.)
 
 ---
 

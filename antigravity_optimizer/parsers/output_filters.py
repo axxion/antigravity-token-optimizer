@@ -70,16 +70,55 @@ class OutputFilters:
 
     @staticmethod
     def filter_cargo_go(output: str) -> Tuple[str, bool]:
-        """Compresses cargo test and go test outputs."""
+        """Compresses `cargo test` and `go test` output.
+
+        Keeping only the marker lines would discard exactly what makes a failure
+        actionable: the panic message, the assertion's left/right values, and the
+        `file.go:42: expected X got Y` detail lines that follow the header. So a failure
+        marker opens a capture window that stays open across its detail lines and closes
+        at the next test boundary — the same shape the Jest filter above uses.
+        """
         lines = output.splitlines()
         if len(lines) <= 15:
             return output, False
 
+        # Lines that begin a failure and everything under it worth keeping.
+        fail_start = ("--- FAIL:", "FAILED", "FAIL:", "error[", "error:")
+        # Lines that end a failure block: the next test starting or passing.
+        fail_end = ("--- PASS:", "=== RUN", "=== CONT", "=== PAUSE", "running ", "test ")
+        # Summary lines, always kept regardless of capture state.
+        summary = ("test result:", "FAIL\t", "ok \t", "ok\t", "--- FAIL:", "FAIL\n")
+
         kept = []
+        in_fail = False
+
         for line in lines:
-            if "FAILED" in line or "FAIL:" in line or "error[" in line or "--- FAIL:" in line:
+            stripped = line.strip()
+
+            if any(marker in line for marker in fail_start):
+                in_fail = True
                 kept.append(line)
-            elif "test result:" in line or "FAIL\t" in line or "ok\t" in line:
+                continue
+
+            if any(line.startswith(marker) or stripped.startswith(marker) for marker in fail_end):
+                # `test <name> ... FAILED` is a failure, not a boundary.
+                if "FAILED" in line or "panicked" in line:
+                    in_fail = True
+                    kept.append(line)
+                else:
+                    in_fail = False
+                continue
+
+            if any(marker in line for marker in summary):
+                kept.append(line)
+                continue
+
+            # Rust panics and assertion diffs can appear outside an open window.
+            if "panicked at" in line or stripped.startswith(("left:", "right:", "assertion")):
+                kept.append(line)
+                continue
+
+            if in_fail and stripped:
                 kept.append(line)
 
         if len(kept) >= 1:

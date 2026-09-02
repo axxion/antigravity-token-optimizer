@@ -21,6 +21,10 @@ from antigravity_optimizer.generators.rules_gen import RulesGenerator
 from antigravity_optimizer.generators.skills_gen import SkillsGenerator
 
 
+GREEN = "\033[92m"
+RED = "\033[91m"
+RESET = "\033[0m"
+
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -203,11 +207,17 @@ def cmd_status(args) -> int:
     skill_file = target / ".agents" / "skills" / "token-optimizer" / "SKILL.md"
     hooks_file = target / ".agents" / "hooks.json"
 
+    # NOTE: these labels are built outside the f-strings below on purpose. A backslash
+    # inside an f-string *expression* is only valid on Python 3.12+, and this package
+    # supports 3.9+ (see pyproject.toml requires-python).
+    active = f"{GREEN}AKTİF{RESET}"
+    missing = f"{RED}YOK{RESET}"
+
     print_banner()
     print(f"🔍 Proje: {target}\n")
-    print(f"  - Kurallar (Rules): {'\033[92mAKTİF\033[0m' if rules_file.exists() else '\033[91mYOK\033[0m'}")
-    print(f"  - Yetenek (Skill):  {'\033[92mAKTİF\033[0m' if skill_file.exists() else '\033[91mYOK\033[0m'}")
-    print(f"  - Kancalar (Hooks): {'\033[92mAKTİF\033[0m' if hooks_file.exists() else '\033[91mYOK\033[0m'}")
+    print(f"  - Kurallar (Rules): {active if rules_file.exists() else missing}")
+    print(f"  - Yetenek (Skill):  {active if skill_file.exists() else missing}")
+    print(f"  - Kancalar (Hooks): {active if hooks_file.exists() else missing}")
     print("")
     return 0
 

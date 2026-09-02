@@ -16,9 +16,16 @@ from tests.test_compressor import (
     test_data_compactor,
     test_context_buffer_store,
     test_compressor_massive_outputs,
+    test_cargo_go_compression_keeps_failure_detail,
 )
 from tests.test_auditor import test_project_auditor
 from tests.test_generators import test_generators_installation
+from tests.test_python_compat import (
+    test_declared_minimum_matches_this_guard,
+    test_no_backslash_inside_fstring_expressions,
+    test_guard_detects_a_known_offender,
+    test_all_sources_parse,
+)
 
 OPTIMIZER_TESTS = [
     ("test_python_ast_skeleton", test_python_ast_skeleton),
@@ -32,6 +39,11 @@ OPTIMIZER_TESTS = [
     ("test_generators_installation", test_generators_installation),
     ("test_ast_skeleton_syntax_errors_and_edge_cases", test_ast_skeleton_syntax_errors_and_edge_cases),
     ("test_compressor_massive_outputs", test_compressor_massive_outputs),
+    ("test_cargo_go_compression_keeps_failure_detail", test_cargo_go_compression_keeps_failure_detail),
+    ("test_declared_minimum_matches_this_guard", test_declared_minimum_matches_this_guard),
+    ("test_no_backslash_inside_fstring_expressions", test_no_backslash_inside_fstring_expressions),
+    ("test_guard_detects_a_known_offender", test_guard_detects_a_known_offender),
+    ("test_all_sources_parse", test_all_sources_parse),
 ]
 
 

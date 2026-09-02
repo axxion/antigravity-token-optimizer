@@ -85,6 +85,50 @@ def test_context_buffer_store():
         assert recovered == huge_log
 
 
+def test_cargo_go_compression_keeps_failure_detail():
+    """Regression: the filter used to keep only marker lines, discarding the panic
+    message, the assertion left/right values and the `file.go:42: expected X got Y`
+    lines — i.e. everything that makes a failure actionable."""
+    from antigravity_optimizer.parsers.output_filters import OutputFilters
+
+    cargo = "\n".join([
+        "   Compiling payments v0.1.0",
+        "    Finished test [unoptimized + debuginfo] target(s) in 2.31s",
+        "",
+        "running 24 tests",
+        *[f"test util::case_{i} ... ok" for i in range(18)],
+        "test payments::test_total ... FAILED",
+        "",
+        "---- payments::test_total stdout ----",
+        "thread 'payments::test_total' panicked at src/payments.rs:88:5:",
+        "assertion `left == right` failed",
+        "  left: 41",
+        " right: 42",
+        "",
+        "test result: FAILED. 23 passed; 1 failed; 0 ignored",
+    ])
+    out, changed = OutputFilters.filter_cargo_go(cargo)
+    assert changed is True
+    for needed in ("panicked at", "left: 41", "right: 42", "test result: FAILED"):
+        assert needed in out, f"cargo failure detail lost: {needed!r}"
+    assert len(out) < len(cargo), "no compression achieved"
+
+    go = "\n".join([
+        *[f"=== RUN   TestOther{i}" for i in range(14)],
+        *[f"--- PASS: TestOther{i} (0.00s)" for i in range(14)],
+        "--- FAIL: TestCheckout (0.01s)",
+        "    payment_test.go:42: expected 1999 got 0",
+        "    payment_test.go:43: currency mismatch: TRY vs USD",
+        "FAIL",
+        "FAIL\texample.com/pkg/payment\t0.031s",
+    ])
+    out, changed = OutputFilters.filter_cargo_go(go)
+    assert changed is True
+    for needed in ("--- FAIL: TestCheckout", "expected 1999 got 0", "currency mismatch"):
+        assert needed in out, f"go failure detail lost: {needed!r}"
+    assert len(out) < len(go), "no compression achieved"
+
+
 def test_compressor_massive_outputs():
     compressor = ContextCompressor(OptimizerConfig(profile=ProfileType.AGGRESSIVE))
 
